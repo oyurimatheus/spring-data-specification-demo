@@ -3,7 +3,6 @@ package me.oyurimatheus.specificationdemo.publishinghouse
 import jakarta.persistence.criteria.Predicate
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.http.ResponseEntity
-import org.springframework.http.ResponseEntity.notFound
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -17,12 +16,11 @@ class FindEditionController(
 
 ) {
 
-
     @GetMapping
     fun find(
-            @RequestParam("authors", defaultValue = "") authors: String,
-            @RequestParam("book", defaultValue = "") book: String,
-            @RequestParam("authors", defaultValue = "") edition: String,
+        @RequestParam("author-slug", defaultValue = "") authorSlugReqParam: String,
+        @RequestParam("book", defaultValue = "") book: String,
+        @RequestParam("edition", defaultValue = "") edition: String,
     ): ResponseEntity<*> {
 
 
@@ -32,13 +30,13 @@ class FindEditionController(
 
             val predicates = mutableListOf<Predicate>()
 
-            if (authors.isNotBlank()) {
+            if (authorSlugReqParam.isNotBlank()) {
 
-                query.distinct(true);
+                query.distinct(true)
                 val author = query.from(Author::class.java)
                 val editionAuthors = root.get<Set<Author>>("authors")
 
-                predicates.add(criteriaBuilder.and(criteriaBuilder.equal(author.get<String>("authorSlug"), authors),
+                predicates.add(criteriaBuilder.and(criteriaBuilder.equal(author.get<String>("authorSlug"), authorSlugReqParam),
                                                    criteriaBuilder.isMember(author, editionAuthors)))
             }
 
@@ -54,20 +52,11 @@ class FindEditionController(
                 predicates.add(predicate)
             }
 
-
-            return@Specification criteriaBuilder.and(*predicates.toTypedArray());
+            return@Specification criteriaBuilder.and(*predicates.toTypedArray())
         }
-
 
         val editions = editionRepository.findAll(specification)
 
-
-        if (editions.isEmpty()) {
-            return ResponseEntity.ok(emptyList<Any>())
-        }
-
         return ResponseEntity.ok(editions)
-
     }
-
 }
