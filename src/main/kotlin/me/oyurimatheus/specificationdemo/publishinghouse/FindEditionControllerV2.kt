@@ -13,17 +13,17 @@ class FindEditionControllerV2(
     private val editionRepository: EditionRepository
 ) {
 
-    @GetMapping("/v2")
+    @GetMapping
     fun find(
         @RequestParam("author-slug", defaultValue = "") authorSlugReqParam: String,
         @RequestParam("book", defaultValue = "") book: String,
         @RequestParam("edition", defaultValue = "") edition: String,
     ): ResponseEntity<*> {
-        var spec = Specification.where<Edition> { root, query, builder ->
+        var spec = Specification.where { root, query, builder ->
             // making fetch to minimize lazy evaluation of response
             // this will result in only one query at the end
-            root.fetch<Edition, Book>("book")
-            root.fetch<Edition, Author>("authors")
+            root.fetch(Edition_.book)
+            root.fetch(Edition_.authors)
             // including distinct to query
             query.distinct(true)
             builder.conjunction()

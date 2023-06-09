@@ -8,30 +8,28 @@ interface EditionRepository : JpaRepository<Edition, Long>, JpaSpecificationExec
 
     object Specs {
         fun byAuthor(author: String): Specification<Edition> {
-            return Specification<Edition> { root, query, builder ->
-                val a = root.get<Set<Author>>("authors")
-                    .get<String>("authorSlug")
-
-                builder.equal(a, author)
+            return Specification<Edition> { root, _, builder ->
+                val authors = root.join(Edition_.authors)
+                builder.equal(authors.get(Author_.authorSlug), author)
             }
         }
 
         fun byBook(book: String): Specification<Edition> {
-            return Specification<Edition> { root, query, builder ->
-                val editionBook = root.join<Edition, Book>("book")
-                builder.equal(editionBook.get<String>("bookSlug"), book)
+            return Specification<Edition> { root, _, builder ->
+                val editionBook = root.join(Edition_.book)
+                builder.equal(editionBook.get(Book_.bookSlug), book)
             }
         }
 
         fun byEdition(edition: String): Specification<Edition> {
-            return Specification<Edition> { root, query, builder ->
-                builder.equal(root.get<String>("editionSlug"), edition)
+            return Specification<Edition> { root, _, builder ->
+                builder.equal(root.get(Edition_.editionSlug), edition)
             }
         }
 
         fun orderByEdition(spec: Specification<Edition>): Specification<Edition> {
             return Specification<Edition> { root, query, builder ->
-                query.orderBy(builder.asc(root.get<String>("editionSlug")))
+                query.orderBy(builder.asc(root.get(Edition_.editionSlug)))
                 spec.toPredicate(root, query, builder)
             }
         }
